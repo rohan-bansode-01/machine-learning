@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login & Register - Emotify</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1350&q=80') no-repeat center/cover;
+    position:relative;
+    color:white;
+}
+body::after{
+    content:"";
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    backdrop-filter:blur(10px);
+    background:rgba(0,0,0,0.4);
+    z-index:-1;
+}
+
+.container {
+    width:500px;
+    max-width:90%;
+    height:650px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 35px;
+    transition: 0.3s ease;
+}
+
+/* Slide wrapper */
+.slider {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.7s ease-in-out;
+}
+
+/* Individual forms */
+.form {
+    width: 50%;
+    height: 100%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(25px) saturate(180%);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 20px rgba(255,255,255,0.05) inset;
+}
+
+h2{
+    text-align:center;
+    margin-bottom:30px;
+    font-size:28px;
+    color:white;
+    text-shadow:0 4px 12px rgba(0,0,0,0.6);
+}
+
+input{
+    margin:12px 0;
+    padding:14px;
+    border-radius:15px;
+    border:none;
+    background: rgba(255,255,255,0.15);
+    color:white;
+    outline:none;
+    backdrop-filter: blur(15px) saturate(180%);
+    font-size:16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+    transition: 0.3s;
+}
+input:hover{
+    background: rgba(255,255,255,0.25);
+}
+
+button{
+    margin-top:20px;
+    padding:14px;
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    color:white;
+    border:none;
+    border-radius:15px;
+    cursor:pointer;
+    font-size:18px;
+    font-weight:bold;
+    box-shadow:0 8px 20px rgba(0,0,0,0.5);
+    transition:0.3s;
+}
+button:hover{
+    transform:translateY(-3px) scale(1.02);
+}
+
+.toggle{
+    margin-top: 20px;
+    text-align: center;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: underline;
+}
+.toggle:hover{
+    color:#6a11cb;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="slider" id="slider">
+
+        <!-- LOGIN -->
+        <div class="form">
+            <h2>Login</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <div class="toggle" onclick="toggleSlide()">Don't have an account? Register</div>
+        </div>
+
+        <!-- REGISTER -->
+        <div class="form">
+            <h2>Register</h2>
+            <input type="text" id="regName" placeholder="Name">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPass" placeholder="Password">
+            <input type="password" id="regConfirm" placeholder="Confirm Password">
+            <button onclick="register()">Register</button>
+            <div class="toggle" onclick="toggleSlide()">Already have an account? Login</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+let slideIndex = 0;
+
+function toggleSlide(){
+    const slider = document.getElementById('slider');
+    slideIndex = slideIndex === 0 ? 1 : 0;
+    slider.style.transform = `translateX(-${slideIndex * 50}%)`;
+}
+
+// Email validation
+function validateEmail(email){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// LOGIN
+function login(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+
+    if(!email || !pass){
+        alert("Please fill in all fields.");
+        return;
+    }
+    if(!validateEmail(email)){
+        alert("Enter a valid email.");
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = users.find(u => u.email === email && u.pass === pass);
+
+    if(!user){
+        alert("Invalid credentials.");
+        return;
+    }
+
+    localStorage.setItem('loggedUser', JSON.stringify(user));
+
+    // Redirect to Flask index page
+    window.location.href = "/index";
+}
+
+// REGISTER
+function register(){
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPass').value.trim();
+    const confirm = document.getElementById('regConfirm').value.trim();
+
+    if(!name || !email || !pass || !confirm){
+        alert("Please fill in all fields.");
+        return;
+    }
+    if(!validateEmail(email)){
+        alert("Enter a valid email.");
+        return;
+    }
+    if(pass !== confirm){
+        alert("Passwords do not match.");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+    if(users.find(u => u.email === email)){
+        alert("Email already registered.");
+        toggleSlide();
+        return;
+    }
+
+    users.push({name,email,pass});
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Registration successful!");
+    toggleSlide();
+}
+</script>
+
+</body>
+</html>

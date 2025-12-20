@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎧 Emotify - AI Emotion Music Recommender</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+<script src="https://kit.fontawesome.com/a2e0a6a67a.js" crossorigin="anonymous"></script>
+<style>
+:root {
+  --primary: #6a11cb;
+  --secondary: #2575fc;
+  --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+  --text-light: #dbe7ff;
+  --bg: radial-gradient(circle at top left, #0a0f1c, #1a1f35);
+  --card: rgba(255,255,255,0.08);
+  --shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+/* Light theme variables */
+body[data-theme="light"] {
+  --bg: #f5f5f5;
+  --text-light: #333;
+  --card: rgba(255,255,255,0.9);
+  --shadow: 0 0 20px rgba(0,0,0,0.2);
+  --primary: #ff6a00;
+  --secondary: #ee0979;
+  --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+* { margin:0; padding:0; box-sizing:border-box; scroll-behavior:smooth; }
+body {
+  font-family:"Poppins", sans-serif;
+  background:var(--bg);
+  color:white;
+  overflow-x:hidden;
+  transition: background 0.3s, color 0.3s;
+}
+nav {
+  position:fixed; top:0; left:0; width:100%; display:flex; justify-content:space-between; align-items:center; padding:18px 50px;
+  background:rgba(0,0,0,0.3); backdrop-filter:blur(15px); z-index:100;
+}
+body[data-theme="light"] nav {
+  background:rgba(255,255,255,0.8); color:#333;
+}
+.logo { font-size:1.8rem; font-weight:900; background:var(--gradient); -webkit-background-clip:text; color:transparent; }
+nav ul { display:flex; list-style:none; gap:35px; }
+nav ul li { cursor:pointer; font-weight:700; color:var(--text-light); transition:0.3s; }
+nav ul li:hover { color:white; }
+.theme-toggle { cursor:pointer; font-size:22px; color:var(--text-light); transition:0.3s; }
+.theme-toggle:hover { color:white; }
+.nav-right { display:flex; align-items:center; gap:25px; position:relative; }
+.profile-wrapper { position:relative; }
+.profile-img { width:42px; height:42px; border-radius:50%; cursor:pointer; border:2px solid var(--secondary); box-shadow:0 0 15px rgba(37,117,252,0.6); transition:0.3s; }
+.profile-img:hover { transform:scale(1.1); }
+.profile-card { position:absolute; top:55px; right:0; width:220px; padding:15px; background:var(--card); backdrop-filter:blur(20px); border-radius:18px; box-shadow:var(--shadow); display:none; text-align:center; z-index:100; }
+.profile-card img { width:60px; height:60px; border-radius:50%; border:2px solid var(--primary); margin-bottom:8px; }
+.profile-card h3 { margin:5px 0; font-size:16px; }
+.profile-card p { font-size:13px; color:#ddd; }
+.profile-btn { width:100%; padding:10px; margin-top:10px; background:var(--gradient); border:none; color:white; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s; }
+.profile-btn:hover { transform:scale(1.05); }
+.profile-btn.danger { background:#ff4e4e; }
+.profile-btn.danger:hover { background:#ff3a3a; }
+
+/* Hero */
+.hero { margin-top:70px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:40px 20px; }
+.hero img { width:300px; max-width:90%; border-radius:20px; box-shadow:0 0 50px rgba(37,117,252,0.4); margin-bottom:25px; }
+.hero h1 { font-size:3rem; background:var(--gradient); -webkit-background-clip:text; color:transparent; margin-bottom:15px; }
+.hero p { color:#ccc; font-size:1.2rem; margin-bottom:25px; }
+.hero button { padding:14px 50px; font-size:18px; font-weight:600; border-radius:50px; border:none; cursor:pointer; background:var(--gradient); color:white; transition:0.3s; }
+.hero button:hover { transform:scale(1.05); }
+
+/* Detector Section */
+section.detector { padding:60px 20px; max-width:900px; margin:40px auto 60px auto; background:var(--card); border-radius:20px; box-shadow:var(--shadow); backdrop-filter:blur(15px); text-align:center; transition: background 0.3s; }
+.detector h2 { margin-bottom:25px; }
+.select-language, #textRequest { padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); margin-bottom:15px; background:rgba(255,255,255,0.1); color:white; outline:none; width:80%; max-width:400px; }
+body[data-theme="light"] .select-language, body[data-theme="light"] #textRequest { background: #fff; color:#333; border:1px solid #ccc; }
+#recordBtn, #textBtn { margin-top:15px; padding:12px 35px; border-radius:50px; border:none; background:var(--gradient); color:white; cursor:pointer; }
+#recordBtn:disabled { opacity:0.5; cursor:not-allowed; }
+#recordBtn:hover, #textBtn:hover { transform:scale(1.05); }
+#emotion { font-size:28px; font-weight:bold; margin-top:15px; }
+#songs iframe { width:100%; height:80px; border-radius:12px; margin:10px 0; }
+.visualizer { display:flex; justify-content:center; align-items:flex-end; gap:5px; height:40px; margin:15px 0; }
+.bar { width:6px; height:10px; background:var(--gradient); border-radius:3px; }
+/* Footer */
+footer { text-align:center; padding:20px; font-size:14px; background:rgba(255,255,255,0.05); color:#aaa; margin-top:20px; border-top:1px solid rgba(255,255,255,0.15); }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo">🎧 Emotify</div>
+  <ul>
+    <li onclick="scrollToSection('detector')">Detector</li>
+    <li onclick="scrollToSection('about')">About</li>
+  </ul>
+  <div class="nav-right">
+    <i class="theme-toggle fas fa-moon" id="themeToggle" title="Toggle Theme"></i>
+    <div class="profile-wrapper">
+      <img src="https://i.ibb.co/4pDNDk1/user.png" class="profile-img" onclick="toggleProfile()" />
+      <div class="profile-card" id="profileCard">
+        <img src="https://i.ibb.co/4pDNDk1/user.png" />
+        <h3 id="profName">Guest User</h3>
+        <p id="profEmail">guest@example.com</p>
+        <button class="profile-btn danger" onclick="googleLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80" alt="Music Hero">
+  <h1>Feel the Beat of Your Emotion</h1>
+  <p>Listen, detect your emotion, and play the perfect song for your mood 🎵</p>
+  <button onclick="scrollToSection('detector')">🎧 Let's Start</button>
+</section>
+
+<!-- EMOTION DETECTOR -->
+<section id="detector" class="detector">
+  <h2>🎤 Emotion Detector & Song Recommender</h2>
+
+  <!-- Audio Section -->
+  <select id="language" class="select-language">
+    <option value="english">English</option>
+    <option value="hindi">Hindi</option>
+    <option value="marathi">Marathi</option>
+  </select>
+  <div class="visualizer" id="visualizer">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+  <button id="recordBtn">🎙️ Record Emotion</button>
+  <p id="audioWarning" style="color:#ff6b6b; display:none; margin-top:10px;">⚠️ Audio recording not supported on this device.</p>
+
+  <hr style="margin:25px 0; border:1px solid rgba(255,255,255,0.2); width:60%;">
+
+  <!-- Text Input Section -->
+  <input type="text" id="textRequest" placeholder="Type your request, e.g., 'give me happy songs in Marathi'"/>
+  <button id="textBtn">🎵 Get Songs</button>
+
+  <div id="emotion"></div>
+  <div id="songs"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" style="max-width:900px;margin:auto;text-align:center;padding:40px;">
+  <h2>💡 About Emotify</h2>
+  <p>Emotify reads your voice tone and emotion in real-time or understands your text requests. It finds the right rhythm for your mood from Spotify’s music library. Built using <b>Flask</b>, <b>Machine Learning</b>, and <b>Spotify API</b>.</p>
+</section>
+
+<footer>© 2025 Emotify | connect with us</footer>
+
+<script>
+// Scroll, theme, profile functions
+function scrollToSection(id){ document.getElementById(id).scrollIntoView({behavior:"smooth"}); }
+
+const toggle = document.getElementById("themeToggle");
+toggle.addEventListener("click", ()=>{
+  const body = document.body;
+  if(body.dataset.theme === "dark"){
+    body.dataset.theme = "light";
+    toggle.className = "theme-toggle fas fa-sun";
+  } else {
+    body.dataset.theme = "dark";
+    toggle.className = "theme-toggle fas fa-moon";
+  }
+});
+
+function toggleProfile(){ 
+  const card=document.getElementById("profileCard"); 
+  card.style.display=(card.style.display==="block")?"none":"block"; 
+}
+document.addEventListener("click",e=>{ 
+  const card=document.getElementById("profileCard"); 
+  const img=document.querySelector(".profile-img"); 
+  if(!card.contains(e.target)&&!img.contains(e.target)){card.style.display="none";} 
+});
+
+function googleLogout(){ 
+  localStorage.removeItem("loggedUser"); 
+  window.location.href="login.html"; 
+}
+
+function updateProfile(){ 
+  const user=JSON.parse(localStorage.getItem("loggedUser")); 
+  const profName=document.getElementById("profName"); 
+  const profEmail=document.getElementById("profEmail"); 
+  if(user){ 
+    profName.textContent=user.name; 
+    profEmail.textContent=user.email;
+  } else { 
+    profName.textContent="Guest User"; 
+    profEmail.textContent="guest@example.com";
+  } 
+}
+document.addEventListener("DOMContentLoaded", updateProfile);
+function onLoginSuccess(user){ 
+  localStorage.setItem("loggedUser", JSON.stringify(user)); 
+  updateProfile(); 
+}
+
+// Audio & Text Detection
+const recordBtn=document.getElementById("recordBtn");
+const emotionEl=document.getElementById("emotion");
+const songsEl=document.getElementById("songs");
+const languageSelect=document.getElementById("language");
+const textInput=document.getElementById("textRequest");
+const textBtn=document.getElementById("textBtn");
+const audioWarning=document.getElementById("audioWarning");
+const emojis={ happy:"😊", sad:"😢", angry:"😡", neutral:"😐", fear:"😱", disgust:"🤢", surprise:"😲", calm:"😌" };
+
+// Check audio support
+let audioSupported=false;
+navigator.mediaDevices.getUserMedia({audio:true})
+.then(stream=>{ audioSupported=true; stream.getTracks().forEach(t=>t.stop()); })
+.catch(()=>{ audioSupported=false; recordBtn.disabled=true; audioWarning.style.display="block"; });
+
+// Audio Recording
+recordBtn.addEventListener("click", async ()=>{
+  if(!audioSupported){ alert("Audio recording not supported."); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{noiseSuppression:true, echoCancellation:true, autoGainControl:true}});
+    const mediaRecorder=new MediaRecorder(stream);
+    let chunks=[]; mediaRecorder.ondataavailable=e=>chunks.push(e.data);
+    mediaRecorder.start();
+    recordBtn.textContent="🎧 Listening...";
+    document.querySelectorAll(".bar").forEach(b=>b.style.animation="bounce 0.5s infinite alternate");
+    await new Promise(r=>setTimeout(r,3000));
+    mediaRecorder.stop();
+    mediaRecorder.onstop=async ()=>{
+      document.querySelectorAll(".bar").forEach(b=>b.style.animation="none");
+      const blob=new Blob(chunks,{type:"audio/wav"});
+      const formData=new FormData();
+      formData.append("audio_data",blob);
+      formData.append("language",languageSelect.value);
+      try{
+        const res=await fetch("/detect_emotion",{method:"POST",body:formData});
+        const data=await res.json();
+        if(data.error){ alert("Error: "+data.error); recordBtn.textContent="🎙️ Record Again"; return; }
+        emotionEl.textContent=`${emojis[data.emotion] || "🎵"} ${data.emotion.toUpperCase()}`;
+        songsEl.innerHTML="";
+        data.songs.forEach(song=>{
+          const match=song.match(/\((https?:\/\/[^\)]+)\)$/);
+          if(match){
+            const embedUrl=match[1].replace("open.spotify.com/track/","open.spotify.com/embed/track/");
+            const iframe=document.createElement("iframe");
+            iframe.src=embedUrl; iframe.allow="encrypted-media"; songsEl.appendChild(iframe);
+          }
+        });
+      }catch(err){ console.error(err); alert("Error sending audio to server."); }
+      recordBtn.textContent="🎙️ Record Again";
+      stream.getTracks().forEach(track=>track.stop());
+    }
+  }catch(err){ console.error(err); alert("Audio recording failed."); }
+});
+
+// Text Request
+textBtn.addEventListener("click", async ()=>{
+  const user_text=textInput.value.trim();
+  if(!user_text){ alert("Please type your request!"); return; }
+  const formData=new FormData();
+  formData.append("user_text",user_text);
+  try{
+    const res=await fetch("/get_songs",{method:"POST",body:formData});
+    const data=await res.json();
+    if(data.error){ alert("Error: "+data.error); return; }
+    emotionEl.textContent=`${emojis[data.emotion] || "🎵"} ${data.emotion.toUpperCase()}`;
+    songsEl.innerHTML="";
+    data.songs.forEach(song=>{
+      const match=song.match(/\((https?:\/\/[^\)]+)\)$/);
+      if(match){
+        const embedUrl=match[1].replace("open.spotify.com/track/","open.spotify.com/embed/track/");
+        const iframe=document.createElement("iframe");
+        iframe.src=embedUrl; iframe.allow="encrypted-media"; songsEl.appendChild(iframe);
+      }
+    });
+  }catch(err){ console.error(err); alert("Error sending text request to server."); }
+});
+</script>
+</body>
+</html>
